@@ -44,12 +44,12 @@ pipeline{
             stages{
                 stage("sg"){
                     steps{
-                        build job: '20-bastion', parameters: [string(name: 'ACTION', value: 'destroy')], propogate: true
+                        build job: '20-bastion', parameters: [string(name: 'ACTION', value: 'destroy')], propagate: true
                     }
                 }
                 stage("vpc"){
                     steps{
-                        build job: '30-rds', parameters: [string(name: 'ACTION', value: 'destroy')], propogate: true
+                        build job: '30-rds', parameters: [string(name: 'ACTION', value: 'destroy')], propagate: true
                     }
                 }
 
