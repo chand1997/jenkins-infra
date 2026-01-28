@@ -1,0 +1,88 @@
+pipeline{
+    agent { label 'agent-1'}
+    environment{
+        project = "expense"
+    }
+    parameters{
+        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Pick something')
+    }
+    stages{
+        stage('apply'){
+            when{
+                expression{
+                    params.ACTION == 'apply'
+                }
+            }
+            steps{
+                script{
+                    sh """
+                        echo "terraform init and apply 70-ingress"
+                    """
+                }
+            }
+        }
+        stage('destroy'){
+            when{
+                expression{
+                    params.ACTION == 'destroy'
+                }
+            }
+            steps{
+                script{
+                    sh """
+                        echo "terraform destroy 70-ingress"
+                    """
+                }
+            }
+        }
+        stage('trigger-destroy'){
+            when{
+                expression{
+                    params.ACTION == 'destroy'
+                }
+            }
+            parallel{
+                stage("bastion"){
+                    steps{
+                        build job: '20-bastion', parameters: [string(name: 'ACTION', value: 'destroy')], wait: false
+                    }
+                }
+                stage("rds"){
+                    steps{
+                        build job: '30-rds', parameters: [string(name: 'ACTION', value: 'destroy')], wait: false
+                    }
+                }
+                stage("eks"){
+                    steps{
+                        build job: '40-eks', parameters: [string(name: 'ACTION', value: 'destroy')], wait: false
+                    }
+                }
+                stage("ecr"){
+                    steps{
+                        build job: '50-ecr', parameters: [string(name: 'ACTION', value: 'destroy')], wait: false
+                    }
+                }
+                stage("acm"){
+                    steps{
+                        build job: '60-acm', parameters: [string(name: 'ACTION', value: 'destroy')], wait: false
+                    }
+                }
+ 
+            }
+
+        }
+    }
+    post{
+        always{
+            echo "Runs always"
+            deleteDir()
+        }
+        success{
+            echo "Runs when build is success"
+        }
+        failure{
+            echo "Runs when build is failed"
+        }
+        
+    }
+}

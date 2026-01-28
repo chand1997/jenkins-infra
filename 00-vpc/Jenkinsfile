@@ -1,0 +1,62 @@
+pipeline{
+    agent { label 'agent-1'}
+    environment{
+        project = "expense"
+    }
+    parameters{
+        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Pick something')
+    }
+    stages{
+        stage('apply'){
+            when{
+                expression{
+                    params.ACTION == 'apply'
+                }
+            }
+            steps{
+                script{
+                    sh """
+                        echo "terraform init and apply 00-vpc"
+                    """
+                }
+            }
+        }
+        stage('destroy'){
+            when{
+                expression{
+                    params.ACTION == 'destroy'
+                }
+            }
+            steps{
+                script{
+                    sh """
+                        echo "terraform destroy 00-vpc"
+                    """
+                }
+            }
+        }
+        stage('trigger-sg'){
+            when{
+                expression{
+                    params.ACTION == 'apply'
+                }
+            }
+            steps{
+                 build job: '10-sg', parameters: [string(name: 'ACTION', value: 'apply')], propagate: true
+            }
+        }
+    }
+    post{
+        always{
+            echo "Runs always"
+            deleteDir()
+        }
+        success{
+            echo "Runs when build is success"
+        }
+        failure{
+            echo "Runs when build is failed"
+        }
+        
+    }
+}

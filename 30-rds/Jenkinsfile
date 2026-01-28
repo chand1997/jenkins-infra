@@ -1,0 +1,52 @@
+pipeline{
+    agent { label 'agent-1'}
+    environment{
+        project = "expense"
+    }
+    parameters{
+        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Pick something')
+    }
+    stages{
+        stage('apply'){
+            when{
+                expression{
+                    params.ACTION == 'apply'
+                }
+            }
+            steps{
+                script{
+                    sh """
+                        echo "terraform init and apply 30-rds"
+                    """
+                }
+            }
+        }
+        stage('destroy'){
+            when{
+                expression{
+                    params.ACTION == 'destroy'
+                }
+            }
+            steps{
+                script{
+                    sh """
+                        echo "terraform destroy 30-rds"
+                    """
+                }
+            }
+        }
+    }
+    post{
+        always{
+            echo "Runs always"
+            deleteDir()
+        }
+        success{
+            echo "Runs when build is success"
+        }
+        failure{
+            echo "Runs when build is failed"
+        }
+        
+    }
+}

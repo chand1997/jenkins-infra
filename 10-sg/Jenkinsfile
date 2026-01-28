@@ -1,0 +1,106 @@
+pipeline{
+    agent { label 'agent-1'}
+    environment{
+        project = "expense"
+    }
+    parameters{
+        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Pick something')
+    }
+    stages{
+        stage('apply'){
+            when{
+                expression{
+                    params.ACTION == 'apply'
+                }
+            }
+            steps{
+                script{
+                    sh """
+                        echo "terraform init and apply 10-sg"
+                    """
+                }
+            }
+        }
+        stage('destroy'){
+            when{
+                expression{
+                    params.ACTION == 'destroy'
+                }
+            }
+            steps{
+                script{
+                    sh """
+                        echo "terraform destroy 10-sg"
+                    """
+                }
+            }
+        }
+        stage('trigger-bastion-rds-eks'){
+            when{
+                expression{
+                    params.ACTION == 'apply'
+                }
+            }
+            parallel{
+                stage("bastion"){
+                    steps{
+                        build job: '20-bastion', parameters: [string(name: 'ACTION', value: 'apply')], 
+                        wait: false
+                    }
+                }
+                stage("rds"){
+                    steps{
+                        build job: '30-rds', parameters: [string(name: 'ACTION', value: 'apply')], wait: false
+                    }
+                }
+                stage("eks"){
+                    steps{
+                        build job: '40-eks', parameters: [string(name: 'ACTION', value: 'apply')], wait: false
+                    }
+                }
+                stage("ecr"){
+                    steps{
+                        build job: '50-ecr', parameters: [string(name: 'ACTION', value: 'apply')], wait: false
+                    }
+                }
+                stage("acm"){
+                    steps{
+                        build job: '60-acm', parameters: [string(name: 'ACTION', value: 'apply')], wait: false
+                    }
+                }
+ 
+            }
+            
+        }
+    }
+    post{
+        always{
+            echo "Runs always"
+            deleteDir()
+        }
+        success{
+            echo "Runs when build is success"
+        }
+        failure{
+            echo "Runs when build is failed"
+        }
+        
+    }
+}
+
+// propogate : true --> If downstream job fails, parent also fails(next steps in parent skips and post-failure runs)
+// wait : true --> parent waits until downstream job finish(whether failed or success)
+
+// if wait : false,propogate option doesnt matters, parent doesn't waits for downstream, it immediately go for next steps
+
+// if propogate: true, wait is defaults to true
+
+// propogate : false and wait: true --> if we want to continue next steps of parent, but want to know results of downstream job
+
+// def r = build job: '20-eks', parameters: [string(name: 'ACTION', value: 'apply')], 
+//           propagate: false,
+//           wait:true
+// if (r.result != 'SUCCESS') {
+//     error "10-sg failed with ${r.result}"
+// }
+
