@@ -35,6 +35,17 @@ pipeline{
                 }
             }
         }
+        stage('trigger-80-cdn'){
+            when{
+                expression{
+                    params.ACTION == 'apply'
+                }
+            }
+            steps{
+                build job: '80-cdn', parameters: [string(name: 'ACTION', value: 'apply')], wait: false
+            }
+
+        }
         stage('trigger-destroy'){
             when{
                 expression{

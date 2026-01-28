@@ -88,10 +88,10 @@ pipeline{
     }
 }
 
-// propogate : true --> If downstream job fails, parent also fails(next steps in parent skips and post-failure runs)
-// wait : true --> parent waits until downstream job finish(whether failed or success)
+// propogate : true --> If downstream job fails, upstream job(parent job) also fails(next steps in parent skips and post-failure runs)
+// wait : true --> upstream job(parent job) waits until downstream job finish(whether failed or success)
 
-// if wait : false,propogate option doesnt matters, parent doesn't waits for downstream, it immediately go for next steps
+// if wait : false,propogate option doesnt matters, upstream job(parent job) doesn't waits for downstream, it immediately go for next steps
 
 // if propogate: true, wait is defaults to true
 
@@ -101,6 +101,6 @@ pipeline{
 //           propagate: false,
 //           wait:true
 // if (r.result != 'SUCCESS') {
-//     error "10-sg failed with ${r.result}"
+//     error "20-eks failed with ${r.result}"
 // }
 
