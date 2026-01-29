@@ -13,12 +13,19 @@ pipeline{
                     params.ACTION == 'apply'
                 }
             }
-            steps{
-                script{
-                    sh """
-                        echo "terraform init and apply 60-acm"
+                        steps{
+                withAWS(credentials: 'aws-creds'){
+                    script{
+                        sh """
+                        cd 60-acm
+                        terraform init -reconfigure
+                        terraform plan 
+                        terraform apply -auto-approve
                     """
                 }
+                    
+                }
+                
             }
         }
         stage('destroy'){
@@ -27,12 +34,18 @@ pipeline{
                     params.ACTION == 'destroy'
                 }
             }
-            steps{
-                script{
-                    sh """
-                        echo "terraform destroy 60-acm"
+   steps{
+                withAWS(credentials: 'aws-creds'){
+                    script{
+                        sh """
+                        cd 60-acm
+                         
+                        terraform destroy -auto-approve
                     """
                 }
+                    
+                }
+                
             }
         }
         stage('trigger-ingress'){

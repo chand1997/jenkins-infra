@@ -14,11 +14,18 @@ pipeline{
                 }
             }
             steps{
-                script{
+                withAWS(credentials: 'aws-creds'){
+                    script{
                     sh """
-                        echo "terraform init and apply 30-rds"
+                        cd 30-rds
+                        terraform init -reconfigure
+                        terraform plan 
+                        terraform apply -auto-approve
                     """
                 }
+                    
+                }
+                
             }
         }
         stage('destroy'){
@@ -27,12 +34,18 @@ pipeline{
                     params.ACTION == 'destroy'
                 }
             }
-            steps{
-                script{
-                    sh """
-                        echo "terraform destroy 30-rds"
+          steps{
+                withAWS(credentials: 'aws-creds'){
+                    script{
+                        sh """
+                        cd 30-rds
+                         
+                        terraform destroy -auto-approve
                     """
                 }
+                    
+                }
+                
             }
         }
     }

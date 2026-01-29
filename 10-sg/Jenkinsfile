@@ -14,11 +14,18 @@ pipeline{
                 }
             }
             steps{
-                script{
-                    sh """
-                        echo "terraform init and apply 10-sg"
+                withAWS(credentials: 'aws-creds'){
+                    script{
+                        sh """
+                        cd 10-sg
+                        terraform init -reconfigure
+                        terraform plan 
+                        terraform apply -auto-approve
                     """
                 }
+                    
+                }
+                
             }
         }
         stage('destroy'){
@@ -28,11 +35,17 @@ pipeline{
                 }
             }
             steps{
-                script{
+                withAWS(credentials: 'aws-creds'){
+                    script{
                     sh """
-                        echo "terraform destroy 10-sg"
+                        cd 10-sg
+                        
+                        terraform destroy -auto-approve
                     """
                 }
+                    
+                }
+                
             }
         }
         stage('trigger-bastion-rds-eks'){
@@ -104,3 +117,5 @@ pipeline{
 //     error "20-eks failed with ${r.result}"
 // }
 
+// if next stage in upstream job is dependent on downstream job --> propagate: true
+// if next stage in upstream job is not dependent on downstream job --> wait: false

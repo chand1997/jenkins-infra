@@ -14,11 +14,18 @@ pipeline{
                 }
             }
             steps{
-                script{
+                withAWS(credentials: 'aws-creds'){
+                    script{
                     sh """
-                        echo "terraform init and apply 20-bastion"
+                        cd 20-bastion
+                        terraform init -reconfigure
+                        terraform plan 
+                        terraform apply -auto-approve
                     """
                 }
+                    
+                }
+                
             }
         }
         stage('destroy'){
@@ -28,11 +35,17 @@ pipeline{
                 }
             }
             steps{
-                script{
-                    sh """
-                        echo "terraform destroy 20-bastion"
+                withAWS(credentials: 'aws-creds'){
+                    script{
+                        sh """
+                        cd 20-bastion
+                         
+                        terraform destroy -auto-approve
                     """
                 }
+                    
+                }
+                
             }
         }
         stage('trigger-destroy'){

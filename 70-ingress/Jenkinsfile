@@ -13,12 +13,19 @@ pipeline{
                     params.ACTION == 'apply'
                 }
             }
-            steps{
-                script{
-                    sh """
-                        echo "terraform init and apply 70-ingress"
+                        steps{
+                withAWS(credentials: 'aws-creds'){
+                    script{
+                        sh """
+                        cd 70-ingress
+                        terraform init -reconfigure
+                        terraform plan 
+                        terraform apply -auto-approve
                     """
                 }
+                    
+                }
+                
             }
         }
         stage('destroy'){
@@ -28,23 +35,18 @@ pipeline{
                 }
             }
             steps{
-                script{
-                    sh """
-                        echo "terraform destroy 70-ingress"
+                withAWS(credentials: 'aws-creds'){
+                    script{
+                        sh """
+                        cd 70-ingress
+                         
+                        terraform destroy -auto-approve
                     """
                 }
-            }
-        }
-        stage('trigger-80-cdn'){
-            when{
-                expression{
-                    params.ACTION == 'apply'
+                    
                 }
+                
             }
-            steps{
-                build job: '80-cdn', parameters: [string(name: 'ACTION', value: 'apply')], wait: false
-            }
-
         }
         stage('trigger-destroy'){
             when{

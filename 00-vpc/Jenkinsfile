@@ -14,11 +14,18 @@ pipeline{
                 }
             }
             steps{
-                script{
+                withAWS(credentials: 'aws-creds'){
+                    script{
                     sh """
-                        echo "terraform init and apply 00-vpc"
+                        cd 00-vpc
+                        terraform init -reconfigure
+                        terraform plan 
+                        terraform apply -auto-approve
                     """
                 }
+                    
+                }
+                
             }
         }
         stage('destroy'){
@@ -28,11 +35,16 @@ pipeline{
                 }
             }
             steps{
-                script{
+                withAWS(credentials: 'aws-creds'){
+                    script{
                     sh """
-                        echo "terraform destroy 00-vpc"
+                        cd 00-vpc
+                        terraform destroy -auto-approve
                     """
                 }
+                    
+                }
+                
             }
         }
         stage('trigger-sg'){
