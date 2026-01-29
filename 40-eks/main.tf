@@ -1,8 +1,8 @@
 # already created at ~/.ssh/eks.pub
-resource "aws_key_pair" "eks" {
-  key_name   = "expense-eks"
-  public_key = file("~/.ssh/eks.pub")
-}
+# resource "aws_key_pair" "eks" {
+#   key_name   = "expense-eks"
+#   public_key = file("~/.ssh/eks.pub")
+# }
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
@@ -44,7 +44,7 @@ module "eks" {
 
       instance_types = ["m5.xlarge"]
       # this is to ssh into worker nodes from bastion using below key
-      key_name = aws_key_pair.eks.key_name
+      # key_name = aws_key_pair.eks.key_name
 
       min_size     = 2
       max_size     = 10
